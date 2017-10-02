@@ -5,14 +5,14 @@ This repository contains the CloudFormation template and code to support the [Re
 
 The repository contains the following files:
 
-    - "gotostate.py" - the script that creates a state machine that is able to resume execution of a failed state machine, from the point of failure.
+- "gotostate.py" - the script that creates a state machine that is able to resume execution of a failed state machine, from the point of failure.
 
-    - "sample_execution_history" - an example execution history of a failed state machine, which the scipt parses in order to help resume workflows midstream.  
+- "sample_execution_history" - an example execution history of a failed state machine, which the scipt parses in order to help resume workflows midstream.  
 
-    - "ResumeFromState.yaml" -  a CloudFormation template that sets up a State Machine and Lambda functions to demonstrate this example.
+- "ResumeFromState.yaml" -  a CloudFormation template that sets up a State Machine and Lambda functions to demonstrate this example.
 
 
-##Tutorial
+## Tutorial
 
 The ResumeFromState.yaml CloudFormation template creates a State Machine and Lambda functions to illustrate how to use the 'gotostate.py' script in order to resume a state machine that has failed midstream. 
 

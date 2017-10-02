@@ -1,0 +1,242 @@
+{
+    "events": [
+        {
+            "timestamp": 1503725123.924, 
+            "executionStartedEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "roleArn": "arn:aws:iam::016893804762:role/ResumeFromState-SampleStatesExecutionRole-17HOAS1HPOGYY"
+            }, 
+            "type": "ExecutionStarted", 
+            "id": 1, 
+            "previousEventId": 0
+        }, 
+        {
+            "timestamp": 1503725123.956, 
+            "type": "ParallelStateEntered", 
+            "id": 2, 
+            "stateEnteredEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "name": "Parallel"
+            }, 
+            "previousEventId": 0
+        }, 
+        {
+            "timestamp": 1503725123.956, 
+            "type": "ParallelStateStarted", 
+            "id": 3, 
+            "previousEventId": 2
+        }, 
+        {
+            "timestamp": 1503725124.059, 
+            "type": "TaskStateEntered", 
+            "id": 4, 
+            "stateEnteredEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "name": "Parallel Step 1, Process 1"
+            }, 
+            "previousEventId": 3
+        }, 
+        {
+            "timestamp": 1503725124.059, 
+            "lambdaFunctionScheduledEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "resource": "arn:aws:lambda:us-west-2:016893804762:function:ResumeFromState-FirstLambda-5SYGJE8Z13GM"
+            }, 
+            "type": "LambdaFunctionScheduled", 
+            "id": 5, 
+            "previousEventId": 4
+        }, 
+        {
+            "timestamp": 1503725124.071, 
+            "type": "TaskStateEntered", 
+            "id": 6, 
+            "stateEnteredEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "name": "Parallel Step 1, Process 2"
+            }, 
+            "previousEventId": 3
+        }, 
+        {
+            "timestamp": 1503725124.071, 
+            "lambdaFunctionScheduledEventDetails": {
+                "input": "{\n    \"Message\": \"Your message here\"\n}", 
+                "resource": "arn:aws:lambda:us-west-2:016893804762:function:ResumeFromState-FirstLambda-5SYGJE8Z13GM"
+            }, 
+            "type": "LambdaFunctionScheduled", 
+            "id": 7, 
+            "previousEventId": 6
+        }, 
+        {
+            "timestamp": 1503725124.173, 
+            "type": "LambdaFunctionStarted", 
+            "id": 8, 
+            "previousEventId": 5
+        }, 
+        {
+            "timestamp": 1503725124.186, 
+            "type": "LambdaFunctionStarted", 
+            "id": 9, 
+            "previousEventId": 7
+        }, 
+        {
+            "lambdaFunctionSucceededEventDetails": {
+                "output": "{\"Message\":\"Your message here\"}"
+            }, 
+            "timestamp": 1503725124.536, 
+            "type": "LambdaFunctionSucceeded", 
+            "id": 10, 
+            "previousEventId": 9
+        }, 
+        {
+            "timestamp": 1503725124.536, 
+            "stateExitedEventDetails": {
+                "output": "{\"Message\":\"Your message here\"}", 
+                "name": "Parallel Step 1, Process 2"
+            }, 
+            "type": "TaskStateExited", 
+            "id": 11, 
+            "previousEventId": 10
+        }, 
+        {
+            "lambdaFunctionSucceededEventDetails": {
+                "output": "{\"Message\":\"Your message here\"}"
+            }, 
+            "timestamp": 1503725124.549, 
+            "type": "LambdaFunctionSucceeded", 
+            "id": 12, 
+            "previousEventId": 8
+        }, 
+        {
+            "timestamp": 1503725124.549, 
+            "stateExitedEventDetails": {
+                "output": "{\"Message\":\"Your message here\"}", 
+                "name": "Parallel Step 1, Process 1"
+            }, 
+            "type": "TaskStateExited", 
+            "id": 13, 
+            "previousEventId": 12
+        }, 
+        {
+            "timestamp": 1503725124.549, 
+            "type": "ParallelStateSucceeded", 
+            "id": 14, 
+            "previousEventId": 13
+        }, 
+        {
+            "timestamp": 1503725124.549, 
+            "stateExitedEventDetails": {
+                "output": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "name": "Parallel"
+            }, 
+            "type": "ParallelStateExited", 
+            "id": 15, 
+            "previousEventId": 13
+        }, 
+        {
+            "timestamp": 1503725124.579, 
+            "type": "ParallelStateEntered", 
+            "id": 16, 
+            "stateEnteredEventDetails": {
+                "input": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "name": "Parallel 2"
+            }, 
+            "previousEventId": 15
+        }, 
+        {
+            "timestamp": 1503725124.579, 
+            "type": "ParallelStateStarted", 
+            "id": 17, 
+            "previousEventId": 16
+        }, 
+        {
+            "timestamp": 1503725124.783, 
+            "type": "TaskStateEntered", 
+            "id": 18, 
+            "stateEnteredEventDetails": {
+                "input": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "name": "Parallel Step 2, Process 1"
+            }, 
+            "previousEventId": 17
+        }, 
+        {
+            "timestamp": 1503725124.783, 
+            "lambdaFunctionScheduledEventDetails": {
+                "input": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "resource": "arn:aws:lambda:us-west-2:016893804762:function:ResumeFromState-SecondLambda-N4YMKMEK3RK"
+            }, 
+            "type": "LambdaFunctionScheduled", 
+            "id": 19, 
+            "previousEventId": 18
+        }, 
+        {
+            "timestamp": 1503725124.796, 
+            "type": "TaskStateEntered", 
+            "id": 20, 
+            "stateEnteredEventDetails": {
+                "input": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "name": "Parallel Step 2, Process 2"
+            }, 
+            "previousEventId": 17
+        }, 
+        {
+            "timestamp": 1503725124.796, 
+            "lambdaFunctionScheduledEventDetails": {
+                "input": "{\"Message\":\"Your message here\",\"output\":[{\"Message\":\"Your message here\"},{\"Message\":\"Your message here\"}]}", 
+                "resource": "arn:aws:lambda:us-west-2:016893804762:function:ResumeFromState-SecondLambda-N4YMKMEK3RK"
+            }, 
+            "type": "LambdaFunctionScheduled", 
+            "id": 21, 
+            "previousEventId": 20
+        }, 
+        {
+            "timestamp": 1503725124.887, 
+            "type": "LambdaFunctionStarted", 
+            "id": 22, 
+            "previousEventId": 19
+        }, 
+        {
+            "timestamp": 1503725124.907, 
+            "type": "LambdaFunctionStarted", 
+            "id": 23, 
+            "previousEventId": 21
+        }, 
+        {
+            "lambdaFunctionFailedEventDetails": {
+                "cause": "The cause could not be determined because Lambda did not return an error type.", 
+                "error": "Lambda.Unknown"
+            }, 
+            "timestamp": 1503725125.256, 
+            "type": "LambdaFunctionFailed", 
+            "id": 24, 
+            "previousEventId": 23
+        }, 
+        {
+            "timestamp": 1503725125.256, 
+            "type": "TaskStateAborted", 
+            "id": 25, 
+            "previousEventId": 24
+        }, 
+        {
+            "timestamp": 1503725125.256, 
+            "type": "TaskStateAborted", 
+            "id": 26, 
+            "previousEventId": 24
+        }, 
+        {
+            "timestamp": 1503725125.256, 
+            "type": "ParallelStateFailed", 
+            "id": 27, 
+            "previousEventId": 24
+        }, 
+        {
+            "executionFailedEventDetails": {
+                "cause": "The cause could not be determined because Lambda did not return an error type.", 
+                "error": "Lambda.Unknown"
+            }, 
+            "timestamp": 1503725125.256, 
+            "type": "ExecutionFailed", 
+            "id": 28, 
+            "previousEventId": 27
+        }
+    ]
+}

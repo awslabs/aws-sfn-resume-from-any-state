@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: An example template for a Step Functions state machine.
+Resources:
+  SampleStatesExecutionRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies: 
+        - 
+          PolicyName: "InvokeLambda"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: "lambda:InvokeFunction"
+                Resource: "*"
+  SampleLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+  FirstLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt SampleLambdaExecutionRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+              event.Message = event.Message;
+              callback(null, event);
+          };
+      Runtime: nodejs4.3
+  SecondLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt SampleLambdaExecutionRole.Arn
+      Code:
+        ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+              if (event.foo == null) {
+                  context.fail()
+              }
+              callback(null, event);
+          };
+      Runtime: nodejs4.3
+  ResumeFromStateExample:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: !Sub 
+        |-
+          {
+            "Comment": "An example state machine to show how to resume exection from a failed state",
+            "StartAt": "Parallel",
+            "States": {
+              "Parallel": {
+                "Type": "Parallel",
+                "ResultPath":"$.output",
+                "Next": "Parallel 2",
+                "Branches": [
+                  {
+                    "StartAt": "Parallel Step 1, Process 1",
+                    "States": {
+                      "Parallel Step 1, Process 1": {
+                        "Type": "Task",
+                        "Resource": "${FirstLambda.Arn}",
+                        "End": true
+                      }
+                    }
+                  },
+                  {
+                    "StartAt": "Parallel Step 1, Process 2",
+                    "States": {
+                      "Parallel Step 1, Process 2": {
+                        "Type": "Task",
+                        "Resource": "${FirstLambda.Arn}",
+                        "End": true
+                      }
+                    }
+                  }
+                ]
+              },
+              "Parallel 2": {
+                "Type": "Parallel",
+                "Next": "Final Processing",
+                "Branches": [
+                  {
+                    "StartAt": "Parallel Step 2, Process 1",
+                    "States": {
+                      "Parallel Step 2, Process 1": {
+                        "Type": "Task",
+                        "Resource": "${SecondLambda.Arn}",
+                        "End": true
+                      }
+                    }
+                  },
+                  {
+                    "StartAt": "Parallel Step 2, Process 2",
+                    "States": {
+                      "Parallel Step 2, Process 2": {
+                        "Type": "Task",
+                        "Resource": "${SecondLambda.Arn}",
+                        "End": true
+                      }
+                    }
+                  }
+                ]
+              }, 
+              "Final Processing": {
+                "Type": "Task",
+                "Resource": "${FirstLambda.Arn}",
+                "End": true
+              }
+            }
+          }
+      RoleArn: !GetAtt SampleStatesExecutionRole.Arn

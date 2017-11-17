@@ -1,7 +1,7 @@
 # aws-sfn-resume-from-any-state
 Resume failed state machines midstream and skip all previously succeded steps. 
 
-This repository contains the CloudFormation template and code to support the [Resume AWS Step Functions from Any State](ADD LINK HERE) blog post.
+This repository contains the CloudFormation template and code to support the [Resume AWS Step Functions from Any State](https://aws.amazon.com/blogs/compute/resume-aws-step-functions-from-any-state/) blog post.
 
 The repository contains the following files:
 

@@ -1,6 +1,8 @@
-import boto3
-import json
 import argparse
+import json
+
+import boto3
+
 client = boto3.client('stepfunctions')
 
 
@@ -22,21 +24,39 @@ def parseFailureHistory(failedExecutionArn):
     Input failedExecutionArn - a string containing the execution Arn of a failed state machine
     Output - a list with two elements: [name of failed state, input to failed state]
     '''
+
+    failedEvents = list()
     failedAtParallelState = False
+
     try:
-        #Get the execution history
+        # Get the execution history
         response = client.get_execution_history(
             executionArn=failedExecutionArn,
             reverseOrder=True
         )
-        failedEvents = response['events']
+        next_token = response.get('nextToken')
+        failedEvents.extend(response['events'])
     except Exception as ex:
-        raise ex    
-    #Confrim that the execution actually failed, raise exception if it didn't fail
+        raise ex
+
+    while next_token is not None:
+        try:
+            # Get the execution history
+            response = client.get_execution_history(
+                executionArn=failedExecutionArn,
+                reverseOrder=True,
+                nextToken=next_token
+            )
+            next_token = response.get('nextToken')
+            failedEvents.extend(response['events'])
+        except Exception as ex:
+            raise ex
+
+    # Confrim that the execution actually failed, raise exception if it didn't fail
     try:
         failedEvents[0]['executionFailedEventDetails']
     except:
-        raise('Execution did not fail')
+        raise ('Execution did not fail')
     '''
     If we have a 'States.Runtime' error (for example if a task state in our state 
     machine attempts to execute a lambda function in a different region than the 
@@ -60,7 +80,7 @@ def parseFailureHistory(failedExecutionArn):
     '''
     currentEventId = failedEvents[0]['id']
     while currentEventId != 0:
-        #multiply event id by -1 for indexing because we're looking at the reversed history
+        # multiply event id by -1 for indexing because we're looking at the reversed history
         currentEvent = failedEvents[-1 * currentEventId]
         '''
         We can determine if the failed state was a parallel state because it an event
@@ -86,7 +106,7 @@ def parseFailureHistory(failedExecutionArn):
             failedState = failedState = currentEvent['stateEnteredEventDetails']['name']
             failedInput = currentEvent['stateEnteredEventDetails']['input']
             return (failedState, failedInput)
-        #Update the id for the next execution of the loop
+        # Update the id for the next execution of the loop
         currentEventId = currentEvent['previousEventId']
 
 
@@ -105,24 +125,26 @@ def attachGoToState(failedStateName, stateMachineArn):
             stateMachineArn=stateMachineArn
         )
     except:
-        raise('Could not get ASL definition of state machine')
+        raise ('Could not get ASL definition of state machine')
     roleArn = response['roleArn']
     stateMachine = json.loads(response['definition'])
-    #Create a name for the new state machine
+    # Create a name for the new state machine
     newName = response['name'] + '-with-GoToState'
-    #Get the StartAt state for the original state machine, because we will point the 'GoToState' to this state 
+    # Get the StartAt state for the original state machine, because we will point the 'GoToState' to this state
     originalStartAt = stateMachine['StartAt']
     '''
     Create the GoToState with the variable $.resuming
     If new state machine is executed with $.resuming = True, then the state machine will skip to the failed state
     Otherwise, it will execute the state machine from the original start state
     '''
-    goToState = {'Type':'Choice', 'Choices':[{'Variable':'$.resuming', 'BooleanEquals':False, 'Next':originalStartAt}], 'Default':failedStateName}
-    #Add GoToState to the set of states in the new state machine
+    goToState = {'Type': 'Choice',
+                 'Choices': [{'Variable': '$.resuming', 'BooleanEquals': False, 'Next': originalStartAt}],
+                 'Default': failedStateName}
+    # Add GoToState to the set of states in the new state machine
     stateMachine['States']['GoToState'] = goToState
-    #Add StartAt 
+    # Add StartAt
     stateMachine['StartAt'] = 'GoToState'
-    #Create new state machine
+    # Create new state machine
     try:
         response = client.create_state_machine(
             name=newName,
@@ -130,7 +152,7 @@ def attachGoToState(failedStateName, stateMachineArn):
             roleArn=roleArn
         )
     except:
-        raise('Failed to create new state machine with GoToState')
+        raise ('Failed to create new state machine with GoToState')
     return response
 
 
@@ -146,6 +168,5 @@ if __name__ == '__main__':
     failedSMInfo = parseFailureHistory(args.failedExecutionArn)
     smArn = smArnFromExecutionArn(args.failedExecutionArn)
     newMachine = attachGoToState(failedSMInfo[0], smArn)
-    print 'New State Machine Arn: ' + newMachine['stateMachineArn']
-    print 'Execution had failed at state: ' + failedSMInfo[0] + ' with Input:'
-    print failedSMInfo[1]
+    print("New State Machine Arn: {}".format(newMachine['stateMachineArn']))
+    print("Execution had failed at state: {} with Input: {}".format(failedSMInfo[0], failedSMInfo[1]))

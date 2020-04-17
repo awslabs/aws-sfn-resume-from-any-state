@@ -94,16 +94,16 @@ def parse_failure_history(failed_execution_arn):
         will be the name of the state in the first 'TaskStateEntered' event type we run into
         when tracing back the execution history
         '''
-        if current_event['type'] == 'TaskStateEntered' and failed_at_parallel_state == False:
+        if current_event['type'] == 'TaskStateEntered' and not failed_at_parallel_state:
             failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
         '''
-        If the failed state was a paralell state, then we need to trace execution back to
+        If the failed state was a parallel state, then we need to trace execution back to
         the first event with 'type'='ParallelStateEntered', and return the name of the state
         '''
         if current_event['type'] == 'ParallelStateEntered' and failed_at_parallel_state:
-            failed_state = failed_state = current_event['stateEnteredEventDetails']['name']
+            failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
         # Update the id for the next execution of the loop
@@ -167,8 +167,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Execution Arn of the failed state machine.')
     parser.add_argument('--failedExecutionArn', dest='failedExecutionArn', type=str)
     args = parser.parse_args()
-    failed_sm_info = parse_failure_history(args.failedExecutionArn)
-    sm_arn = sm_arn_from_execution_arn(args.failedExecutionArn)
-    new_machine = attach_go_to_state(failed_sm_info[0], sm_arn)
+    failed_sm_state, failed_sm_info = parse_failure_history(args.failedExecutionArn)
+    failed_sm_arn = sm_arn_from_execution_arn(args.failedExecutionArn)
+    new_machine = attach_go_to_state(failed_sm_state, failed_sm_arn)
     print("New State Machine Arn: {}".format(new_machine['stateMachineArn']))
-    print("Execution had failed at state: {} with Input: {}".format(failed_sm_info[0], failed_sm_info[1]))
+    print("Execution had failed at state: {} with Input: {}".format(failed_sm_state, failed_sm_info))

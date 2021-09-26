@@ -58,7 +58,7 @@ Resources:
               event.Message = event.Message;
               callback(null, event);
           };
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
   SecondLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -72,7 +72,7 @@ Resources:
               }
               callback(null, event);
           };
-      Runtime: nodejs4.3
+      Runtime: nodejs10.x
   ResumeFromStateExample:
     Type: AWS::StepFunctions::StateMachine
     Properties:

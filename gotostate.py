@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 
 import boto3
 
@@ -26,7 +27,7 @@ def parse_failure_history(failed_execution_arn):
     """
 
     failed_events = list()
-    failed_at_parallel_state = False
+    failed_at_parallel_or_map_state = False
 
     try:
         # Get the execution history
@@ -57,6 +58,7 @@ def parse_failure_history(failed_execution_arn):
         failed_events[0]['executionFailedEventDetails']
     except Exception as cause:
         raise Exception('Execution did not fail', cause)
+
     '''
     If we have a 'States.Runtime' error (for example if a task state in our state
     machine attempts to execute a lambda function in a different region than the
@@ -68,12 +70,13 @@ def parse_failure_history(failed_execution_arn):
         failed_state = failed_events[-1 * failed_id]['stateEnteredEventDetails']['name']
         failed_input = failed_events[-1 * failed_id]['stateEnteredEventDetails']['input']
         return failed_state, failed_input
+
     '''
     We need to loop through the execution history, tracing back the executed steps
     The first state we encounter will be the failed state
-    If we failed on a parallel state, we need the name of the parallel state rather than the
-    name of a state within a parallel state it failed on. This is because we can only attach
-    the goToState to the parallel state, but not a sub-state within the parallel state.
+    If we failed on a parallel or map state, we need the name of the parallel or map state rather than the
+    name of a state within a parallel or map state it failed on. This is because we can only attach
+    the goToState to the parallel or map state, but not a sub-state within the parallel or map state.
     This loop starts with the id of the latest event and uses the previous event id's to trace
     back the execution to the beginning (id 0). However, it will return as soon it finds the name
     of the failed state
@@ -82,27 +85,30 @@ def parse_failure_history(failed_execution_arn):
     while current_event_id != 0:
         # multiply event id by -1 for indexing because we're looking at the reversed history
         current_event = failed_events[-1 * current_event_id]
+
         '''
-        We can determine if the failed state was a parallel state because it an event
-        with 'type'='ParallelStateFailed' will appear in the execution history before
+        We can determine if the failed state was a parallel or map state because it an event
+        with 'type'='ParallelStateFailed' or 'MapStateFailed' will appear in the execution history before
         the name of the failed state
         '''
-        if current_event['type'] == 'ParallelStateFailed':
-            failed_at_parallel_state = True
+        if current_event["type"] in ["ParallelStateFailed", "MapStateFailed"]:
+            failed_at_parallel_or_map_state = True
+
         '''
-        If the failed state is not a parallel state, then the name of failed state to return
+        If the failed state is not a parallel or map state, then the name of failed state to return
         will be the name of the state in the first 'TaskStateEntered' event type we run into
         when tracing back the execution history
         '''
-        if current_event['type'] == 'TaskStateEntered' and not failed_at_parallel_state:
+        if current_event["type"] == "TaskStateEntered" and not failed_at_parallel_or_map_state:
             failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
+
         '''
-        If the failed state was a parallel state, then we need to trace execution back to
-        the first event with 'type'='ParallelStateEntered', and return the name of the state
+        If the failed state was a parallel or map state, then we need to trace execution back to
+        the first event with 'type'='ParallelStateEntered' or 'MapStateEntered', and return the name of the state
         '''
-        if current_event['type'] == 'ParallelStateEntered' and failed_at_parallel_state:
+        if current_event["type"] in ["ParallelStateEntered", "MapStateEntered"] and failed_at_parallel_or_map_state:
             failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
@@ -159,16 +165,17 @@ def attach_go_to_state(failed_state_name, state_machine_arn):
 
 
 if __name__ == '__main__':
-    '''
-    Main
-    Run as:
-    python gotostate.py --failedExecutionArn '<Failed_Execution_Arn>'"
-    '''
+    if len(sys.argv) != 3:
+        print("Usage: python gotostate.py --failedExecutionArn '<Failed_Execution_Arn>'")
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(description='Execution Arn of the failed state machine.')
-    parser.add_argument('--failedExecutionArn', dest='failedExecutionArn', type=str)
+    parser.add_argument('--failedExecutionArn', dest='failedExecutionArn', type=str, required=True)
     args = parser.parse_args()
+
     failed_sm_state, failed_sm_info = parse_failure_history(args.failedExecutionArn)
     failed_sm_arn = sm_arn_from_execution_arn(args.failedExecutionArn)
     new_machine = attach_go_to_state(failed_sm_state, failed_sm_arn)
-    print("New State Machine Arn: {}".format(new_machine['stateMachineArn']))
-    print("Execution had failed at state: {} with Input: {}".format(failed_sm_state, failed_sm_info))
+
+    print(f"New State Machine Arn: {new_machine['stateMachineArn']}")
+    print(f"Execution had failed at \nstate: {failed_sm_state} \nwith Input: {failed_sm_info}")

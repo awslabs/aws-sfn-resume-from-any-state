@@ -91,7 +91,7 @@ def parse_failure_history(failed_execution_arn):
         with 'type'='ParallelStateFailed' or 'MapStateFailed' will appear in the execution history before
         the name of the failed state
         '''
-        if current_event["type"] in ["ParallelStateFailed", "MapStateFailed"]:
+        if current_event['type'] in ['ParallelStateFailed', 'MapStateFailed']:
             failed_at_parallel_or_map_state = True
 
         '''
@@ -99,7 +99,7 @@ def parse_failure_history(failed_execution_arn):
         will be the name of the state in the first 'TaskStateEntered' event type we run into
         when tracing back the execution history
         '''
-        if current_event["type"] == "TaskStateEntered" and not failed_at_parallel_or_map_state:
+        if current_event['type'] == 'TaskStateEntered' and not failed_at_parallel_or_map_state:
             failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
@@ -108,7 +108,7 @@ def parse_failure_history(failed_execution_arn):
         If the failed state was a parallel or map state, then we need to trace execution back to
         the first event with 'type'='ParallelStateEntered' or 'MapStateEntered', and return the name of the state
         '''
-        if current_event["type"] in ["ParallelStateEntered", "MapStateEntered"] and failed_at_parallel_or_map_state:
+        if current_event['type'] in ['ParallelStateEntered', 'MapStateEntered'] and failed_at_parallel_or_map_state:
             failed_state = current_event['stateEnteredEventDetails']['name']
             failed_input = current_event['stateEnteredEventDetails']['input']
             return failed_state, failed_input
